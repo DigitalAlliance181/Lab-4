@@ -1,0 +1,171 @@
+EEC 181 – Lab Report #4
+Chris Bird, Lillian Deas, Kaila Balancio
+
+	This lab was designed to introduce us to the functions of the TRDB_D5M Camera that we will be using in our final design project. The set up and intial connection of the camera was simple enough and it was interesting to see exactly how the unit functioned and responded to the user input. 
+
+	The main, and therefore the most “complex,” portion of this lab was looking through the provided code and understanding what was happening in each module. To test our understanding we responded to the questions posed to us throughout the lab, which are included below. Looking at the code it seemed simple enough but once you began to scrutinize every line of code we discovered that the code provided was not written as clearly as we had anticipated. There were variables that seemed to be “free floating”  and had cryptic names. Therefore we spent a lot of time as a team attempting to decide where to implement our code. After many hours of “decrypting” we finally decided where to place the code for both assignments.
+
+	Assignment 1, the rotating of the image, would be placed in the CCD_CAPTURE module, the module that reads the information from the camera into a data matrix. Our plan was to rotate the image before it was stored into the matrix so that when the data is sent to the display all it has to do is “print” the image. This proved to the the more difficult of the two projects assigned to us as the most logical way to think about it was more complicated to implement. This caused us to reformulate our ideas and to confer with other teams and the TA.
+
+	Assignment 2, changing the 2x2  data matrices into 3x3 matrices, we added our own code into RAW2RGB to implement the answer to question 14 below. The altering of the matrices came down to changing the mathmatical statements that corresponded to how the data was read and then stored. We hypothesized that we would not need to change the inputs or outputs in this module but that we would need to add some extra registers to fit the rest of the data that we are working with. We also decided that it might be best to keep a copy of the 2x2 code commented in the code for easy switching and referral purposes. 
+
+Aproximate Hours Spent on Section II: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Questions in Lab 4:
+Intro Question: Do you see the camera video on the display? What are the red led's doing? What is the seven segment display doing?
+We do see the camera video on display. The red led's are quickly flashing. The seven segment display is counting up in hexadecimal.
+
+Q1. What are the three user input signals?
+Zoom mode (full view, zoom view), Exposure increase, Exposure decrease
+
+Q2. Follow the verilog code in the I2C_CCD_CONFIG Module and draw the block diagram of the I2C_CCD_CONFIG module showing input and output communication lines. Your diagram should include a block for the USER INPUT, the Main Block for the I2C_CCD_CONFIG, and a block for the camera, showing communication lines.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Q3. What camera image parameters does the zoom signal control to change the captured image size?
+It changes the row size and the column size to focus on a smaller section of the image. 
+
+Q4. Describe in words the function and register settings does the above code change depending on the user input. Convert all HEX numbers into decimal numbers.
+When iZOOM_MODE_SW = 0:
+sampling mode = 2x binning
+column size = 2559
+row size = 1919
+column bin, row bin, column skip, row skip = 1 
+column start = 0
+row start = 0
+When iZOOM_MODE_SW = 1:
+sampling mode = disabled
+column size = 1279
+row size = 959
+column bin, row bin, row skip, column skip = 0 
+column start = 528
+row start = 54
+camera can zoom into the image
+
+Q5. When the camera is set to binning, what is the real resolution of the camera?
+Using values from above: 1280x960
+
+Q6. The camera resolution does not match the VGA resolution of 640 x 480. Should they match? Why does the resolution match or not match?
+They do not match and they should not match. The resolution does not match because when you convert from the Bayer pattern to the RGB pattern, the rows and columns decreases by half.  The resolution then decreases as well by one fourth.
+
+Q7. What is the reset camera image exposure time? What is the exposure increment value with each exposure change?
+Reset camera image exposure time = 1984, exposure increment value = 200
+
+Q8. Describe how the I2C controller clock is generated from the system clock.
+The clock frequency of the controller is derived using a counter that increments then divides the system clock into lower frequencies. The lower frequency clock is toggled when the count has been exceeded and it resets for the next clock level. 
+
+Q9. How many total registers need to be updated? How many register updates need to be performed?
+Total registers = 24, register updates = 25
+
+Q10. Review the CCD_CAPTURE module code and describe how the code functions. There are four control variables that control the flow of the CCD_CAPTURE module, make sure you describe the state of the control variables as the CCD_CAPTURE module progresses.
+iFVAL and iLVAL need to be valid. oDVAL is set to 1 => iDATA feeds to oDATA. 
+When the input is valid the horizontal coordinate of the current pixel increments by 1 every class structure. Once the horizontal coordinate reaches the COLUMN_WIDTH (1280), horizontal coordinate returns to 0 and the vertical coordinate increases by 1.
+iFVAL and iLVAL have a positive edge 
+
+Q11. The camera can operate with a pixel clock frequency of 96MHz, the maximum frame rate in VGA mode is 70fps. Knowing that our system has a pixel clock of 25MHz, nwhat is the frame rate of our system?
+Camera pixel clk freq= 96MHz, Max Frame Rate = 70fps, Pixel clk = 25
+702596=18fps
+
+Q12. How can the maximum frame rate calculated in Q10 be increased?
+As you increase the frequency of the system clock with will also increase the frame rate. Therefore when you set the system clock to 50MHz the frame rate also increases to 50MHz, which is its max. If you really wanted to make the system clock run faster than 50MHz you can modify PLL.
+
+Q13. Describe how the current pixel color is determined mathematically in every case.
+Red is assigned using the red neighbor pixel. Blue is assigned using the blue neighbor pixel. Green is assigned by adding the green neighbor pixels.
+
+Q14. Suppose we want additional pixel color averaging to smooth out the image colors. A 3 x 3 pixel matrix is used instead of a 2 x 2 pixel matrix. How many 3 x 3 pixel matrix combinations are possible and draw out ALLztp4 the combinations?
+
+B
+G
+B
+G
+R
+G
+B
+G
+B
+
+G
+B
+G
+R
+G
+R
+G
+B
+G
+
+G
+R
+G
+B
+G
+B
+G
+R
+G
+
+R
+G
+R
+G
+B
+G
+R
+G
+R
+
+Q15. Write down the verilog code that down samples the camera image?
+mDVAL <= {iY_Cont[0]|iX_Cont[0]} ? 1’b0: iDVAL;
+
+
+Q16. Why must color averaging be used instead of direct addition?
+Too many color intensity values of a single color can cause bit overflow, which makes the color intensity lighter than it should be.
